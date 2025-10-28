@@ -14,6 +14,8 @@ namespace Dominio.Dtos
         public int Quantidade { get; set; }
         public DateTime Data { get; set; }
         public string Observacao { get; set; } = string.Empty;
+        public ProdutoDto? Produto { get; set; }
     }
 }
+
 

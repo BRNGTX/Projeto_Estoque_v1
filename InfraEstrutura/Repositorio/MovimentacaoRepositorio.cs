@@ -19,6 +19,8 @@ namespace InfraEstrutura.Repositorio
         {
             await contexto.MovimentacoesEstoque.AddAsync(dto);
             await contexto.SaveChangesAsync();
+            // Carregar o produto relacionado
+            await contexto.Entry(dto).Reference(m => m.Produto).LoadAsync();
             return dto;
         }
 
@@ -59,6 +61,7 @@ namespace InfraEstrutura.Repositorio
         {
             return await contexto.MovimentacoesEstoque
                 .Include(m => m.Produto)
+                    .ThenInclude(p => p!.Categoria)
                 .Where(expression)
                 .OrderByDescending(m => m.Data)
                 .Skip((pageNumber - 1) * pageSize)
@@ -78,4 +81,5 @@ namespace InfraEstrutura.Repositorio
         }
     }
 }
+
 

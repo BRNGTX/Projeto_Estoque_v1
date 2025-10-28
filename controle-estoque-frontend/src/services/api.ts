@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Categoria, Produto, Usuario, LoginResponse, PagedResult, MovimentacaoEstoque } from '../types';
+import { Categoria, Produto, Usuario, LoginResponse, MovimentacaoEstoque, RelatorioMovimentacoes, RelatorioCategoriaItem, RelatorioProduto, RelatorioSintetico } from '../types';
 import { ENV, API_CONFIG } from '../config';
 
 const api = axios.create({
@@ -131,6 +131,10 @@ export const movimentacaoService = {
     await api.delete(`/Movimentacao/${id}`);
   },
 
+  async update(id: number, movimentacao: Omit<MovimentacaoEstoque, 'id' | 'data'>): Promise<void> {
+    await api.put(`/Movimentacao/${id}`, movimentacao);
+  },
+
   async getByProduto(idProduto: number): Promise<MovimentacaoEstoque[]> {
     const response = await api.get<MovimentacaoEstoque[]>(`/Movimentacao/produto/${idProduto}`);
     return response.data;
@@ -138,6 +142,28 @@ export const movimentacaoService = {
 
   async getByTipo(tipo: string): Promise<MovimentacaoEstoque[]> {
     const response = await api.get<MovimentacaoEstoque[]>(`/Movimentacao/tipo/${tipo}`);
+    return response.data;
+  }
+};
+
+export const relatorioService = {
+  async getMovimentacoesPorPeriodo(dataInicio: string, dataFim: string): Promise<RelatorioMovimentacoes[]> {
+    const response = await api.get<RelatorioMovimentacoes[]>(`/Relatorio/movimentacoes?dataInicio=${dataInicio}&dataFim=${dataFim}`);
+    return response.data;
+  },
+
+  async getCategoriaPorPeriodo(dataInicio: string, dataFim: string): Promise<RelatorioCategoriaItem[]> {
+    const response = await api.get<RelatorioCategoriaItem[]>(`/Relatorio/categorias`);
+    return response.data;
+  },
+
+  async getProdutoPorPeriodo(dataInicio: string, dataFim: string): Promise<RelatorioProduto[]> {
+    const response = await api.get<RelatorioProduto[]>(`/Relatorio/produtos`);
+    return response.data;
+  },
+
+  async getRelatorioSintetico(): Promise<RelatorioSintetico> {
+    const response = await api.get<RelatorioSintetico>(`/Relatorio/sintetico`);
     return response.data;
   }
 };

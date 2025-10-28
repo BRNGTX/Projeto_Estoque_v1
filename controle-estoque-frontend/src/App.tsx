@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProdutosPage from './pages/ProdutosPage';
 import CategoriasPage from './pages/CategoriasPage';
 import MovimentacoesPage from './pages/MovimentacoesPage';
+import RelatoriosPage from './pages/RelatoriosPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return authService.isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                   <Route path="/produtos" element={<ProdutosPage />} />
                   <Route path="/categorias" element={<CategoriasPage />} />
                   <Route path="/movimentacoes" element={<MovimentacoesPage />} />
+                  <Route path="/relatorios" element={<RelatoriosPage />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>

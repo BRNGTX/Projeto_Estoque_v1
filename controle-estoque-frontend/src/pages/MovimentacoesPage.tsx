@@ -12,6 +12,7 @@ const MovimentacoesPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<string>('Todos');
+  const [editingId, setEditingId] = useState<number | null>(null);
   
   const [formData, setFormData] = useState({
     idProduto: 0,
@@ -62,10 +63,16 @@ const MovimentacoesPage: React.FC = () => {
 
     try {
       setError('');
-      await movimentacaoService.create(formData);
-      setSuccessMessage('Movimentação registrada com sucesso!');
+      if (editingId) {
+        await movimentacaoService.update(editingId, formData);
+        setSuccessMessage('Movimentação atualizada com sucesso!');
+      } else {
+        await movimentacaoService.create(formData);
+        setSuccessMessage('Movimentação registrada com sucesso!');
+      }
       setTimeout(() => setSuccessMessage(''), 3000);
       setShowForm(false);
+      setEditingId(null);
       setFormData({ idProduto: 0, tipo: 'Entrada', quantidade: 1, observacao: '' });
       loadMovimentacoes();
       loadProdutos(); // Atualizar estoque dos produtos
@@ -88,6 +95,23 @@ const MovimentacoesPage: React.FC = () => {
     } catch (err: any) {
       setError('Erro ao excluir movimentação');
     }
+  };
+
+  const handleEdit = (mov: MovimentacaoEstoque) => {
+    setEditingId(mov.id);
+    setFormData({
+      idProduto: mov.produto?.id || 0,
+      tipo: mov.tipo,
+      quantidade: mov.quantidade,
+      observacao: mov.observacao || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({ idProduto: 0, tipo: 'Entrada', quantidade: 1, observacao: '' });
   };
 
   const filteredMovimentacoes = movimentacoes.filter(mov => {
@@ -181,6 +205,13 @@ const MovimentacoesPage: React.FC = () => {
                   <td>{mov.observacao || '-'}</td>
                   <td>
                     <button 
+                      className="btn btn-sm btn-warning btn-icon" 
+                      onClick={() => handleEdit(mov)}
+                      title="Editar movimentação"
+                    >
+                      <FiEdit2 /> Editar
+                    </button>
+                    <button 
                       className="btn btn-sm btn-danger btn-icon" 
                       onClick={() => handleDelete(mov.id)}
                       title="Excluir movimentação"
@@ -211,11 +242,11 @@ const MovimentacoesPage: React.FC = () => {
       </div>
 
       {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+        <div className="modal-overlay" onClick={handleCloseForm}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Nova Movimentação</h2>
-              <button className="btn-icon" onClick={() => setShowForm(false)}>
+              <h2>{editingId ? 'Editar Movimentação' : 'Nova Movimentação'}</h2>
+              <button className="btn-icon" onClick={handleCloseForm}>
                 ×
               </button>
             </div>
@@ -279,11 +310,11 @@ const MovimentacoesPage: React.FC = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>
+                <button type="button" className="btn btn-secondary" onClick={handleCloseForm}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  <FiPlus /> Registrar
+                  <FiPlus /> {editingId ? 'Atualizar' : 'Registrar'}
                 </button>
               </div>
             </form>

@@ -11,3 +11,4 @@ CREATE TABLE IF NOT EXISTS MovimentacaoEstoque (
     INDEX IX_MovimentacaoEstoque_IdProduto (IdProduto)
 );
 
+

@@ -73,6 +73,24 @@ namespace Projeto2025_API.Controllers
         {
             return Ok(await service.listAsync(m => m.Tipo == tipo));
         }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> Update(int id, MovimentacaoEstoqueDto dto)
+        {
+            try
+            {
+                dto.Id = id;
+                var ret = await service.updateAsync(dto);
+                if (ret)
+                    return NoContent();
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
+
 

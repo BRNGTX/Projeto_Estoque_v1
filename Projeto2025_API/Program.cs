@@ -74,6 +74,7 @@ builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddScoped<IValidator<ProdutoDto>, ProdutoValidacao>();
 builder.Services.AddScoped<IMovimentacaoRepositorio, MovimentacaoRepositorio>();
 builder.Services.AddScoped<IMovimentacaoService, MovimentacaoService>();
+builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 
 
 builder.Services.AddCors();
