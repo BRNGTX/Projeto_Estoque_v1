@@ -19,6 +19,7 @@ namespace InfraEstrutura.Data
 
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<Produto> Produtos { get; set; }
+        public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,22 @@ namespace InfraEstrutura.Data
                 .OnDelete(DeleteBehavior.Restrict);
             });
 
+            modelBuilder.Entity<MovimentacaoEstoque>(builder => {
+                builder.ToTable("MovimentacaoEstoque");
+                builder.HasKey(m => m.Id);
+                builder.Property(m => m.Tipo)
+                    .IsRequired().HasMaxLength(50);
+                builder.Property(m => m.Quantidade)
+                    .IsRequired();
+                builder.Property(m => m.Data)
+                    .IsRequired();
+                
+                // Relacionamento com Produto
+                builder.HasOne(m => m.Produto)
+                    .WithMany()
+                    .HasForeignKey(m => m.IdProduto)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
         }
     }

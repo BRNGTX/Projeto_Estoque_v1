@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Categoria, Produto, Usuario, LoginResponse, PagedResult } from '../types';
+import { Categoria, Produto, Usuario, LoginResponse, PagedResult, MovimentacaoEstoque } from '../types';
 import { ENV, API_CONFIG } from '../config';
 
 const api = axios.create({
@@ -107,6 +107,37 @@ export const produtoService = {
 
   async search(nome: string): Promise<Produto[]> {
     const response = await api.get<Produto[]>(`/Produto/${nome}`);
+    return response.data;
+  }
+};
+
+export const movimentacaoService = {
+  async getAll(): Promise<MovimentacaoEstoque[]> {
+    const response = await api.get<MovimentacaoEstoque[]>('/Movimentacao');
+    return response.data;
+  },
+
+  async getById(id: number): Promise<MovimentacaoEstoque> {
+    const response = await api.get<MovimentacaoEstoque>(`/Movimentacao/${id}`);
+    return response.data;
+  },
+
+  async create(movimentacao: Omit<MovimentacaoEstoque, 'id' | 'data'>): Promise<MovimentacaoEstoque> {
+    const response = await api.post<MovimentacaoEstoque>('/Movimentacao', movimentacao);
+    return response.data;
+  },
+
+  async delete(id: number): Promise<void> {
+    await api.delete(`/Movimentacao/${id}`);
+  },
+
+  async getByProduto(idProduto: number): Promise<MovimentacaoEstoque[]> {
+    const response = await api.get<MovimentacaoEstoque[]>(`/Movimentacao/produto/${idProduto}`);
+    return response.data;
+  },
+
+  async getByTipo(tipo: string): Promise<MovimentacaoEstoque[]> {
+    const response = await api.get<MovimentacaoEstoque[]>(`/Movimentacao/tipo/${tipo}`);
     return response.data;
   }
 };

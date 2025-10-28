@@ -33,3 +33,13 @@ export interface PagedResult<T> {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
 }
+
+export interface MovimentacaoEstoque {
+  id: number;
+  idProduto: number;
+  tipo: string;
+  quantidade: number;
+  data: string;
+  observacao: string;
+  produto?: Produto;
+}

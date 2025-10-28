@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authService, produtoService } from '../services/api';
-import { FiBox, FiGrid, FiTag, FiLogOut, FiTrendingUp, FiBell } from 'react-icons/fi';
+import { FiBox, FiGrid, FiTag, FiLogOut, FiTrendingUp, FiBell, FiActivity } from 'react-icons/fi';
 import { API_CONFIG } from '../config';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -51,6 +51,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <li>
               <Link to="/produtos" className={isActive('/produtos')}>
                 <FiTag /> Produtos
+              </Link>
+            </li>
+            <li>
+              <Link to="/movimentacoes" className={isActive('/movimentacoes')}>
+                <FiActivity /> Movimentações
               </Link>
             </li>
             <li>
