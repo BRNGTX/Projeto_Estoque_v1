@@ -10,6 +10,9 @@ namespace Projeto2025_API.Mapping
         
             CreateMap<Categoria, CategoriaDto>().ReverseMap();
             CreateMap<Produto, ProdutoDto>().ReverseMap();
+            CreateMap<MovimentacaoEstoque, MovimentacaoEstoqueDto>()
+                .ForMember(dest => dest.IdProduto, opt => opt.MapFrom(src => src.Produto != null ? src.Produto.Id : src.IdProduto))
+                .ReverseMap();
         }
     }
 }
