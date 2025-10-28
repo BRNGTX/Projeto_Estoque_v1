@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MovimentacaoEstoque, Produto } from '../types';
 import { movimentacaoService, produtoService } from '../services/api';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiPackage, FiLoader, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiPackage, FiLoader, FiTrendingUp } from 'react-icons/fi';
 
 const MovimentacoesPage: React.FC = () => {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
@@ -173,7 +173,7 @@ const MovimentacoesPage: React.FC = () => {
                   <td><FiPackage style={{ marginRight: '6px', verticalAlign: 'middle' }} /> {mov.produto?.descricao || 'N/A'}</td>
                   <td>
                     <span className={`badge ${mov.tipo === 'Entrada' ? 'badge-success' : 'badge-danger'}`}>
-                      {mov.tipo === 'Entrada' ? <FiTrendingUp /> : <FiTrendingDown />}
+                      {mov.tipo === 'Entrada' ? <FiTrendingUp /> : '⬇️'}
                       {' '}{mov.tipo}
                     </span>
                   </td>
