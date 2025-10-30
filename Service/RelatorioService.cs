@@ -30,8 +30,11 @@ namespace Service
 
         public async Task<RelatorioMovimentacoesDto> GetRelatorioMovimentacoes(DateTime dataInicio, DateTime dataFim)
         {
+            // Ajustar para considerar até 23:59:59.9999999 de dataFim
+            var dataFimComHora = dataFim.Date.AddDays(1).AddTicks(-1);
+
             var movimentacoes = await movimentacaoRepositorio.listAsync(m => 
-                m.Data >= dataInicio && m.Data <= dataFim.AddDays(1));
+                m.Data >= dataInicio.Date && m.Data <= dataFimComHora);
 
             var entradas = movimentacoes
                 .Where(m => m.Tipo == "Entrada")

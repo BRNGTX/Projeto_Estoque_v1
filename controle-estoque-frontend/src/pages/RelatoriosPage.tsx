@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { relatorioService } from '../services/api';
 import { RelatorioMovimentacoes, RelatorioCategoriaItem, RelatorioProduto, RelatorioSintetico } from '../types';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type TabType = 'sintetico' | 'movimentacoes' | 'categorias' | 'produtos';
 
@@ -68,6 +70,83 @@ export default function RelatoriosPage() {
     a.href = url;
     a.download = `${nome}_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+  };
+
+  // Exportar PDF - Movimentações
+  const exportarPDFMovimentacoes = () => {
+    if (!relatorioMovimentacoes) return;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text('Controle de Estoque - Relatório de Movimentações', 15, 15);
+    doc.setFontSize(10);
+    doc.text(`Período: ${dataInicio} até ${dataFim}`, 15, 22);
+    doc.text(`Data exportação: ${new Date().toLocaleDateString('pt-BR')}`, 15, 28);
+    //Tabela
+    const body = relatorioMovimentacoes.movimentacoes.map(mov => [
+      mov.id,
+      mov.produto?.descricao || '',
+      mov.tipo,
+      mov.quantidade,
+      new Date(mov.data).toLocaleDateString('pt-BR'),
+      mov.observacao || '-' 
+    ]);
+    (doc as any).autoTable({
+      startY: 34,
+      head:[['ID','Produto','Tipo','Quantidade','Data','Observação']],
+      body,
+      theme: 'grid',
+    });
+    doc.save(`relatorio_movimentacoes_${dataInicio}_a_${dataFim}.pdf`);
+  };
+  // Exportar PDF - Categorias
+  const exportarPDFCategorias = () => {
+    if (relatorioCategorias.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text('Controle de Estoque - Relatório por Categoria', 15, 15);
+    doc.setFontSize(10);
+    doc.text(`Período: ${dataInicio} até ${dataFim}`, 15, 22);
+    doc.text(`Data exportação: ${new Date().toLocaleDateString('pt-BR')}`, 15, 28);
+    //Tabela
+    const body = relatorioCategorias.map(cat => [
+      cat.nomeCategoria,
+      cat.totalProdutos,
+      cat.quantidadeTotalEstoque,
+      `R$ ${cat.valorTotalEstoque.toFixed(2)}`
+    ]);
+    (doc as any).autoTable({
+      startY: 34,
+      head:[['Categoria','Produtos','Quantidade Total','Valor Total']],
+      body,
+      theme: 'grid',
+    });
+    doc.save(`relatorio_categorias_${dataInicio}_a_${dataFim}.pdf`);
+  };
+  // Exportar PDF - Produtos
+  const exportarPDFProdutos = () => {
+    if (relatoriosProdutos.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text('Controle de Estoque - Relatório de Produtos', 15, 15);
+    doc.setFontSize(10);
+    doc.text(`Período: ${dataInicio} até ${dataFim}`, 15, 22);
+    doc.text(`Data exportação: ${new Date().toLocaleDateString('pt-BR')}`, 15, 28);
+    //Tabela
+    const body = relatoriosProdutos.map(prod => [
+      prod.descricao,
+      prod.categoria,
+      prod.quantidade,
+      `R$ ${prod.valor.toFixed(2)}`,
+      `R$ ${prod.valorTotal.toFixed(2)}`,
+      prod.status
+    ]);
+    (doc as any).autoTable({
+      startY: 34,
+      head:[['Produto','Categoria','Quantidade','Valor Unit.','Valor Total','Status']],
+      body,
+      theme: 'grid',
+    });
+    doc.save(`relatorio_produtos_${dataInicio}_a_${dataFim}.pdf`);
   };
 
   return (
@@ -259,6 +338,12 @@ export default function RelatoriosPage() {
                 >
                   <span>⬇️</span> Exportar CSV
                 </button>
+                <button
+                  className="btn btn-sm btn-outline-danger ms-2"
+                  onClick={exportarPDFMovimentacoes}
+                >
+                  <span>⬇️</span> Exportar PDF
+                </button>
               </div>
 
               <div className="table-responsive">
@@ -313,6 +398,12 @@ export default function RelatoriosPage() {
                 >
                   <span>⬇️</span> Exportar CSV
                 </button>
+                <button
+                  className="btn btn-sm btn-outline-danger ms-2"
+                  onClick={exportarPDFCategorias}
+                >
+                  <span>⬇️</span> Exportar PDF
+                </button>
               </div>
 
               <div className="row">
@@ -355,6 +446,12 @@ export default function RelatoriosPage() {
                   onClick={() => exportarCSV(relatoriosProdutos, 'produtos')}
                 >
                   <span>⬇️</span> Exportar CSV
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-danger ms-2"
+                  onClick={exportarPDFProdutos}
+                >
+                  <span>⬇️</span> Exportar PDF
                 </button>
               </div>
 
