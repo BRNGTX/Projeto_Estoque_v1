@@ -73,38 +73,6 @@ namespace InfraEstrutura.Migrations
                     b.ToTable("Produto", (string)null);
                 });
 
-            modelBuilder.Entity("Dominio.Entidades.MovimentacaoEstoque", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Data")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("IdProduto")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Observacao")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Quantidade")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdProduto");
-
-                    b.ToTable("MovimentacaoEstoque", (string)null);
-                });
-
             modelBuilder.Entity("Dominio.Entidades.Produto", b =>
                 {
                     b.HasOne("Dominio.Entidades.Categoria", "Categoria")
@@ -114,17 +82,6 @@ namespace InfraEstrutura.Migrations
                         .IsRequired();
 
                     b.Navigation("Categoria");
-                });
-
-            modelBuilder.Entity("Dominio.Entidades.MovimentacaoEstoque", b =>
-                {
-                    b.HasOne("Dominio.Entidades.Produto", "Produto")
-                        .WithMany()
-                        .HasForeignKey("IdProduto")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("Dominio.Entidades.Categoria", b =>

@@ -4,6 +4,13 @@ import { RelatorioMovimentacoes, RelatorioCategoriaItem, RelatorioProduto, Relat
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Declaração de tipo para autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 type TabType = 'sintetico' | 'movimentacoes' | 'categorias' | 'produtos';
 
 export default function RelatoriosPage() {
@@ -34,9 +41,18 @@ export default function RelatoriosPage() {
         relatorioService.getProdutoPorPeriodo(dataInicio, dataFim)
       ]);
       setRelatorioSintetico(sintetico);
-      setRelatorioMovimentacoes(movimentacoes[0] || null);
-      setRelatorioCategorias(categorias);
-      setRelatoriosProdutos(produtos);
+      setRelatorioMovimentacoes(movimentacoes || null);
+      setRelatorioCategorias(Array.isArray(categorias) ? categorias : []);
+      setRelatoriosProdutos(Array.isArray(produtos) ? produtos : []);
+      
+      // Debug: verificar se o valor está sendo recebido
+      if (sintetico) {
+        console.log('=== DEBUG RELATÓRIO SINTÉTICO ===');
+        console.log('Relatório completo:', sintetico);
+        console.log('produtosBaixoEstoque:', sintetico.produtosBaixoEstoque);
+        console.log('Tipo:', typeof sintetico.produtosBaixoEstoque);
+        console.log('Todas as chaves:', Object.keys(sintetico));
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao carregar relatórios');
     } finally {
@@ -50,26 +66,6 @@ export default function RelatoriosPage() {
 
   const handleFiltrar = () => {
     loadRelatorios();
-  };
-
-  const exportarCSV = (data: any[], nome: string) => {
-    const headers = Object.keys(data[0] || {});
-    const csv = [
-      headers.join(','),
-      ...data.map(row =>
-        headers.map(header => {
-          const value = row[header];
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-        }).join(',')
-      )
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${nome}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
   };
 
   // Exportar PDF - Movimentações
@@ -90,10 +86,10 @@ export default function RelatoriosPage() {
       new Date(mov.data).toLocaleDateString('pt-BR'),
       mov.observacao || '-' 
     ]);
-    (doc as any).autoTable({
+    doc.autoTable({
       startY: 34,
-      head:[['ID','Produto','Tipo','Quantidade','Data','Observação']],
-      body,
+      head: [['ID','Produto','Tipo','Quantidade','Data','Observação']],
+      body: body,
       theme: 'grid',
     });
     doc.save(`relatorio_movimentacoes_${dataInicio}_a_${dataFim}.pdf`);
@@ -114,10 +110,10 @@ export default function RelatoriosPage() {
       cat.quantidadeTotalEstoque,
       `R$ ${cat.valorTotalEstoque.toFixed(2)}`
     ]);
-    (doc as any).autoTable({
+    doc.autoTable({
       startY: 34,
-      head:[['Categoria','Produtos','Quantidade Total','Valor Total']],
-      body,
+      head: [['Categoria','Produtos','Quantidade Total','Valor Total']],
+      body: body,
       theme: 'grid',
     });
     doc.save(`relatorio_categorias_${dataInicio}_a_${dataFim}.pdf`);
@@ -140,10 +136,10 @@ export default function RelatoriosPage() {
       `R$ ${prod.valorTotal.toFixed(2)}`,
       prod.status
     ]);
-    (doc as any).autoTable({
+    doc.autoTable({
       startY: 34,
-      head:[['Produto','Categoria','Quantidade','Valor Unit.','Valor Total','Status']],
-      body,
+      head: [['Produto','Categoria','Quantidade','Valor Unit.','Valor Total','Status']],
+      body: body,
       theme: 'grid',
     });
     doc.save(`relatorio_produtos_${dataInicio}_a_${dataFim}.pdf`);
@@ -227,15 +223,17 @@ export default function RelatoriosPage() {
 
         <div className="card-body">
           {/* Relatório Sintético */}
-          {activeTab === 'sintetico' && relatorioSintetico && (
+          {activeTab === 'sintetico' && (
             <div className="relatorio-sintetico">
+              {relatorioSintetico ? (
+                <>
               <div className="row g-3">
                 <div className="col-md-3">
                   <div className="stats-card">
                     <div className="stats-icon">📦</div>
                     <div className="stats-content">
                       <span className="stats-label">Total de Produtos</span>
-                      <div className="stats-value">{relatorioSintetico.totalProdutos}</div>
+                      <div className="stats-value">{relatorioSintetico.totalProdutos ?? 0}</div>
                     </div>
                   </div>
                 </div>
@@ -244,7 +242,7 @@ export default function RelatoriosPage() {
                     <div className="stats-icon" style={{ color: '#e74c3c' }}>⚠️</div>
                     <div className="stats-content">
                       <span className="stats-label">Sem Estoque</span>
-                      <div className="stats-value">{relatorioSintetico.produtosSemEstoque}</div>
+                      <div className="stats-value">{relatorioSintetico.produtosSemEstoque ?? 0}</div>
                     </div>
                   </div>
                 </div>
@@ -253,7 +251,11 @@ export default function RelatoriosPage() {
                     <div className="stats-icon" style={{ color: '#f39c12' }}>🔔</div>
                     <div className="stats-content">
                       <span className="stats-label">Estoque Baixo</span>
-                      <div className="stats-value">{relatorioSintetico.produtosBaixoEstoque}</div>
+                      <div className="stats-value">
+                        {relatorioSintetico.produtosBaixoEstoque !== undefined 
+                          ? relatorioSintetico.produtosBaixoEstoque 
+                          : (relatorioSintetico as any).ProdutosBaixoEstoque ?? 0}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -297,85 +299,100 @@ export default function RelatoriosPage() {
                   </div>
                 </div>
               </div>
+                </>
+              ) : (
+                <div className="alert alert-info" role="alert">
+                  📋 Carregando relatório sintético...
+                </div>
+              )}
             </div>
           )}
 
           {/* Relatório de Movimentações */}
-          {activeTab === 'movimentacoes' && relatorioMovimentacoes && (
+          {activeTab === 'movimentacoes' && (
             <div>
-              <div className="row mb-3">
-                <div className="col-md-4">
-                  <div className="stats-card">
-                    <div className="stats-content">
-                      <span className="stats-label">Total de Movimentações</span>
-                      <div className="stats-value">{relatorioMovimentacoes.totalMovimentacoes}</div>
+              {relatorioMovimentacoes ? (
+                <>
+                  <div className="row mb-3">
+                    <div className="col-md-4">
+                      <div className="stats-card">
+                        <div className="stats-content">
+                          <span className="stats-label">Total de Movimentações</span>
+                          <div className="stats-value">{relatorioMovimentacoes.totalMovimentacoes || 0}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4">
+                      <div className="stats-card">
+                        <div className="stats-content">
+                          <span className="stats-label">Total Entradas</span>
+                          <div className="stats-value" style={{ color: '#27ae60' }}>{relatorioMovimentacoes.totalEntradas || 0}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4">
+                      <div className="stats-card">
+                        <div className="stats-content">
+                          <span className="stats-label">Total Saídas</span>
+                          <div className="stats-value" style={{ color: '#e74c3c' }}>{relatorioMovimentacoes.totalSaidas || 0}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="stats-card">
-                    <div className="stats-content">
-                      <span className="stats-label">Total Entradas</span>
-                      <div className="stats-value" style={{ color: '#27ae60' }}>{relatorioMovimentacoes.totalEntradas}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="stats-card">
-                    <div className="stats-content">
-                      <span className="stats-label">Total Saídas</span>
-                      <div className="stats-value" style={{ color: '#e74c3c' }}>{relatorioMovimentacoes.totalSaidas}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5>Movimentações Detalhadas</h5>
-                <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => exportarCSV(relatorioMovimentacoes.movimentacoes, 'movimentacoes')}
-                >
-                  <span>⬇️</span> Exportar CSV
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger ms-2"
-                  onClick={exportarPDFMovimentacoes}
-                >
-                  <span>⬇️</span> Exportar PDF
-                </button>
-              </div>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Movimentações Detalhadas</h5>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={exportarPDFMovimentacoes}
+                      disabled={!relatorioMovimentacoes.movimentacoes || relatorioMovimentacoes.movimentacoes.length === 0}
+                    >
+                      <span>⬇️</span> Exportar PDF
+                    </button>
+                  </div>
 
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>ID</th>
-                      <th>Produto</th>
-                      <th>Tipo</th>
-                      <th>Quantidade</th>
-                      <th>Data</th>
-                      <th>Observação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {relatorioMovimentacoes.movimentacoes.map((mov) => (
-                      <tr key={mov.id}>
-                        <td>#{mov.id}</td>
-                        <td>{mov.produto?.descricao || 'N/A'}</td>
-                        <td>
-                          <span className={`badge ${mov.tipo === 'Entrada' ? 'bg-success' : 'bg-danger'}`}>
-                            {mov.tipo}
-                          </span>
-                        </td>
-                        <td>{mov.quantidade}</td>
-                        <td>{new Date(mov.data).toLocaleDateString('pt-BR')}</td>
-                        <td>{mov.observacao || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  {relatorioMovimentacoes.movimentacoes && relatorioMovimentacoes.movimentacoes.length > 0 ? (
+                    <div className="table-responsive">
+                      <table className="table table-striped table-hover">
+                        <thead className="table-dark">
+                          <tr>
+                            <th>ID</th>
+                            <th>Produto</th>
+                            <th>Tipo</th>
+                            <th>Quantidade</th>
+                            <th>Data</th>
+                            <th>Observação</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {relatorioMovimentacoes.movimentacoes.map((mov) => (
+                            <tr key={mov.id}>
+                              <td>#{mov.id}</td>
+                              <td>{mov.produto?.descricao || 'N/A'}</td>
+                              <td>
+                                <span className={`badge ${mov.tipo === 'Entrada' ? 'bg-success' : 'bg-danger'}`}>
+                                  {mov.tipo}
+                                </span>
+                              </td>
+                              <td>{mov.quantidade}</td>
+                              <td>{new Date(mov.data).toLocaleDateString('pt-BR')}</td>
+                              <td>{mov.observacao || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="alert alert-info" role="alert">
+                      📋 Nenhuma movimentação encontrada para o período selecionado.
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="alert alert-info" role="alert">
+                  📋 Carregando relatório de movimentações...
+                </div>
+              )}
             </div>
           )}
 
@@ -385,54 +402,47 @@ export default function RelatoriosPage() {
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5>Análise por Categoria</h5>
                 <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => exportarCSV(
-                    relatorioCategorias.map(c => ({
-                      Categoria: c.nomeCategoria,
-                      'Produtos': c.totalProdutos,
-                      'Quantidade Total': c.quantidadeTotalEstoque,
-                      'Valor Total': c.valorTotalEstoque
-                    })),
-                    'categorias'
-                  )}
-                >
-                  <span>⬇️</span> Exportar CSV
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger ms-2"
+                  className="btn btn-sm btn-outline-danger"
                   onClick={exportarPDFCategorias}
+                  disabled={relatorioCategorias.length === 0}
                 >
                   <span>⬇️</span> Exportar PDF
                 </button>
               </div>
 
-              <div className="row">
-                {relatorioCategorias.map((categoria) => (
-                  <div key={categoria.idCategoria} className="col-md-6 mb-4">
-                    <div className="card">
-                      <div className="card-body">
-                        <h6 className="card-title">{categoria.nomeCategoria}</h6>
-                        <div className="row g-2">
-                          <div className="col-6">
-                            <small className="text-muted">Produtos</small>
-                            <div className="fw-bold">{categoria.totalProdutos}</div>
-                          </div>
-                          <div className="col-6">
-                            <small className="text-muted">Quantidade</small>
-                            <div className="fw-bold">{categoria.quantidadeTotalEstoque}</div>
-                          </div>
-                          <div className="col-12">
-                            <small className="text-muted">Valor Total</small>
-                            <div className="fw-bold" style={{ color: '#27ae60' }}>
-                              R$ {categoria.valorTotalEstoque.toFixed(2)}
+              {relatorioCategorias.length > 0 ? (
+                <div className="row">
+                  {relatorioCategorias.map((categoria) => (
+                    <div key={categoria.idCategoria} className="col-md-6 mb-4">
+                      <div className="card">
+                        <div className="card-body">
+                          <h6 className="card-title">{categoria.nomeCategoria}</h6>
+                          <div className="row g-2">
+                            <div className="col-6">
+                              <small className="text-muted">Produtos</small>
+                              <div className="fw-bold">{categoria.totalProdutos}</div>
+                            </div>
+                            <div className="col-6">
+                              <small className="text-muted">Quantidade</small>
+                              <div className="fw-bold">{categoria.quantidadeTotalEstoque}</div>
+                            </div>
+                            <div className="col-12">
+                              <small className="text-muted">Valor Total</small>
+                              <div className="fw-bold" style={{ color: '#27ae60' }}>
+                                R$ {categoria.valorTotalEstoque.toFixed(2)}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="alert alert-info" role="alert">
+                  📋 Nenhuma categoria encontrada com produtos no estoque.
+                </div>
+              )}
             </div>
           )}
 
@@ -442,53 +452,54 @@ export default function RelatoriosPage() {
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5>Análise Detalhada de Produtos</h5>
                 <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => exportarCSV(relatoriosProdutos, 'produtos')}
-                >
-                  <span>⬇️</span> Exportar CSV
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-danger ms-2"
+                  className="btn btn-sm btn-outline-danger"
                   onClick={exportarPDFProdutos}
+                  disabled={relatoriosProdutos.length === 0}
                 >
                   <span>⬇️</span> Exportar PDF
                 </button>
               </div>
 
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>Produto</th>
-                      <th>Categoria</th>
-                      <th>Quantidade</th>
-                      <th>Valor Unit.</th>
-                      <th>Valor Total</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {relatoriosProdutos.map((produto) => (
-                      <tr key={produto.id}>
-                        <td><strong>{produto.descricao}</strong></td>
-                        <td>{produto.categoria}</td>
-                        <td>{produto.quantidade}</td>
-                        <td>R$ {produto.valor.toFixed(2)}</td>
-                        <td className="fw-bold">R$ {produto.valorTotal.toFixed(2)}</td>
-                        <td>
-                          <span className={`badge ${
-                            produto.status === 'Normal' ? 'bg-success' :
-                            produto.status === 'Estoque Baixo' ? 'bg-warning' :
-                            'bg-danger'
-                          }`}>
-                            {produto.status}
-                          </span>
-                        </td>
+              {relatoriosProdutos.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead className="table-dark">
+                      <tr>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unit.</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {relatoriosProdutos.map((produto) => (
+                        <tr key={produto.id}>
+                          <td><strong>{produto.descricao}</strong></td>
+                          <td>{produto.categoria}</td>
+                          <td>{produto.quantidade}</td>
+                          <td>R$ {produto.valor.toFixed(2)}</td>
+                          <td className="fw-bold">R$ {produto.valorTotal.toFixed(2)}</td>
+                          <td>
+                            <span className={`badge ${
+                              produto.status === 'Normal' ? 'bg-success' :
+                              produto.status === 'Estoque Baixo' ? 'bg-warning' :
+                              'bg-danger'
+                            }`}>
+                              {produto.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="alert alert-info" role="alert">
+                  📋 Nenhum produto encontrado no estoque.
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -95,7 +95,7 @@ namespace Service
                 Valor = p.Valor,
                 ValorTotal = p.Quantidade * p.Valor,
                 Status = p.Quantidade == 0 ? "Sem Estoque" : 
-                         p.Quantidade < 5 ? "Estoque Baixo" : "Normal"
+                         p.Quantidade < 10 ? "Estoque Baixo" : "Normal"
             }).OrderBy(p => p.Quantidade).ToList();
 
             return resultado;
@@ -109,7 +109,7 @@ namespace Service
             var valorTotalEstoque = produtos.Sum(p => p.Quantidade * p.Valor);
             var totalProdutos = produtos.Count;
             var produtosSemEstoque = produtos.Count(p => p.Quantidade == 0);
-            var produtosBaixoEstoque = produtos.Count(p => p.Quantidade > 0 && p.Quantidade < 5);
+            var produtosBaixoEstoque = produtos.Count(p => p.Quantidade > 0 && p.Quantidade < 10);
 
             var movimentacoesHoje = movimentacoes
                 .Where(m => m.Data.Date == DateTime.Now.Date)

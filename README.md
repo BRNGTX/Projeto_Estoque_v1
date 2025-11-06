@@ -1,58 +1,139 @@
 # Sistema de Controle de Estoque
 
-Sistema completo de controle de estoque desenvolvido com .NET Core (Backend) e React (Frontend).
+Sistema completo de controle de estoque desenvolvido com arquitetura em camadas, utilizando .NET 8.0 (Backend) e React 18 com TypeScript (Frontend).
 
-## 🚀 Tecnologias Utilizadas
+## 📋 Índice
 
-### Backend (.NET Core)
-- **.NET 8.0**
-- **Entity Framework Core 9.0.8**
-- **MySQL** (Pomelo.EntityFrameworkCore.MySql)
-- **AutoMapper** para mapeamento de objetos
-- **FluentValidation** para validações
-- **JWT Bearer** para autenticação
-- **Swagger** para documentação da API
+- [Visão Geral](#visão-geral)
+- [Arquitetura](#arquitetura)
+- [Tecnologias](#tecnologias)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Pré-requisitos](#pré-requisitos)
+- [Instalação e Execução](#instalação-e-execução)
+- [API Endpoints](#api-endpoints)
+- [Funcionalidades](#funcionalidades)
+- [Configurações](#configurações)
+- [Scripts Úteis](#scripts-úteis)
 
-### Frontend (React)
-- **React 18** com TypeScript
-- **React Router DOM** para navegação
-- **Axios** para requisições HTTP
-- **CSS3** para estilização
+## 🎯 Visão Geral
+
+Sistema de gestão de estoque completo que permite:
+- Gerenciamento de produtos e categorias
+- Controle de movimentações de estoque (entradas e saídas)
+- Geração de relatórios em PDF
+- Dashboard com estatísticas em tempo real
+- Sistema de autenticação JWT
+- Alertas de estoque baixo
+
+## 🏗️ Arquitetura
+
+O projeto segue uma arquitetura em camadas (Clean Architecture):
+
+```
+┌─────────────────────────────────────┐
+│         Frontend (React)            │
+│     Interface do Usuário            │
+└──────────────┬──────────────────────┘
+               │ HTTP/REST
+┌──────────────▼──────────────────────┐
+│      API Layer (Controllers)        │
+│     Projeto2025_API                 │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Service Layer                   │
+│     Lógica de Negócio                │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Repository Layer                │
+│     Acesso a Dados                   │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Database (MySQL)                │
+│     Persistência de Dados            │
+└──────────────────────────────────────┘
+```
+
+### Camadas do Backend
+
+1. **Dominio**: Entidades e DTOs (Data Transfer Objects)
+2. **Interface**: Contratos e interfaces dos serviços e repositórios
+3. **Service**: Lógica de negócio e regras de validação
+4. **InfraEstrutura**: Implementação de repositórios e acesso a dados (Entity Framework)
+5. **Projeto2025_API**: Camada de apresentação (Controllers, Middleware, Validações)
+
+## 🚀 Tecnologias
+
+### Backend
+- **.NET 8.0** - Framework principal
+- **Entity Framework Core 9.0.8** - ORM para acesso a dados
+- **MySQL** (Pomelo.EntityFrameworkCore.MySql) - Banco de dados
+- **AutoMapper** - Mapeamento de objetos
+- **FluentValidation** - Validação de dados
+- **JWT Bearer** - Autenticação e autorização
+- **Swagger/OpenAPI** - Documentação da API
+
+### Frontend
+- **React 18** - Biblioteca JavaScript
+- **TypeScript** - Tipagem estática
+- **React Router DOM** - Roteamento
+- **Axios** - Cliente HTTP
+- **jsPDF + jspdf-autotable** - Geração de PDFs
+- **CSS3** - Estilização
 
 ## 📁 Estrutura do Projeto
 
 ```
 Trabalho-C--main/
-├── Dominio/                    # Entidades e DTOs
+├── Dominio/                          # Camada de Domínio
 │   ├── Entidades/
 │   │   ├── Categoria.cs
-│   │   └── Produto.cs
+│   │   ├── Produto.cs
+│   │   └── MovimentacaoEstoque.cs
 │   └── Dtos/
 │       ├── CategoriaDto.cs
 │       ├── ProdutoDto.cs
+│       ├── MovimentacaoEstoqueDto.cs
 │       ├── UsuarioDTO.cs
+│       ├── RelatorioDto.cs
 │       └── PagedResult.cs
-├── InfraEstrutura/            # Camada de infraestrutura
-│   ├── Data/
-│   │   ├── EmpresaContexto.cs
-│   │   └── ContextoEmpresaFactory.cs
-│   ├── Repositorio/
-│   │   ├── CategoriaRepositorio.cs
-│   │   └── ProdutoRepositorio.cs
-│   └── Scripts/
-│       └── create_database.sql
-├── Interface/                  # Contratos/Interfaces
+│
+├── Interface/                        # Contratos/Interfaces
 │   ├── ICategoriaRepositorio.cs
 │   ├── ICategoriaService.cs
 │   ├── IProdutoRepositorio.cs
-│   └── IProdutoService.cs
-├── Service/                    # Lógica de negócio
+│   ├── IProdutoService.cs
+│   ├── IMovimentacaoRepositorio.cs
+│   ├── IMovimentacaoService.cs
+│   └── IRelatorioService.cs
+│
+├── Service/                          # Camada de Serviços
 │   ├── CategoriaService.cs
-│   └── ProdutoService.cs
-├── Projeto2025_API/           # API Web
+│   ├── ProdutoService.cs
+│   ├── MovimentacaoService.cs
+│   └── RelatorioService.cs
+│
+├── InfraEstrutura/                   # Camada de Infraestrutura
+│   ├── Data/
+│   │   ├── EmpresaContexto.cs       # DbContext do Entity Framework
+│   │   └── ContextoEmpresaFactory.cs
+│   ├── Repositorio/
+│   │   ├── CategoriaRepositorio.cs
+│   │   ├── ProdutoRepositorio.cs
+│   │   └── MovimentacaoRepositorio.cs
+│   ├── Migrations/                   # Migrações do Entity Framework
+│   └── Scripts/
+│       ├── create_database.sql
+│       └── add_movimentacao_estoque.sql
+│
+├── Projeto2025_API/                 # Camada de Apresentação
 │   ├── Controllers/
 │   │   ├── CategoriaController.cs
 │   │   ├── ProdutoController.cs
+│   │   ├── MovimentacaoController.cs
+│   │   ├── RelatorioController.cs
 │   │   └── SegurancaController.cs
 │   ├── Middleware/
 │   │   └── GlobalExceptionMiddleware.cs
@@ -61,148 +142,397 @@ Trabalho-C--main/
 │   │   └── ProdutoValidacao.cs
 │   ├── Mapping/
 │   │   └── MappingProfile.cs
-│   └── Program.cs
-└── controle-estoque-frontend/  # Frontend React
+│   ├── Program.cs
+│   └── appsettings.json
+│
+└── controle-estoque-frontend/       # Frontend React
     ├── src/
     │   ├── components/
+    │   │   ├── Layout.tsx
+    │   │   ├── CategoriaForm.tsx
+    │   │   └── ProdutoForm.tsx
     │   ├── pages/
+    │   │   ├── LoginPage.tsx
+    │   │   ├── DashboardPage.tsx
+    │   │   ├── ProdutosPage.tsx
+    │   │   ├── CategoriasPage.tsx
+    │   │   ├── MovimentacoesPage.tsx
+    │   │   └── RelatoriosPage.tsx
     │   ├── services/
-    │   └── types/
-    └── package.json
+    │   │   └── api.ts
+    │   ├── types/
+    │   │   └── index.ts
+    │   ├── config.ts
+    │   ├── App.tsx
+    │   └── index.tsx
+    ├── package.json
+    └── tsconfig.json
 ```
 
-## 🛠️ Como Executar
+## 📦 Pré-requisitos
 
-### Pré-requisitos
-- .NET 8.0 SDK
-- MySQL Server
-- Node.js (para o frontend)
+- **.NET 8.0 SDK** ou superior
+- **MySQL Server** 8.0 ou superior
+- **Node.js** 16.x ou superior
+- **npm** (incluído com Node.js)
+
+## 🛠️ Instalação e Execução
+
+### Opção 1: Script Automatizado (Recomendado)
+
+Use o script PowerShell `init.ps1` para automatizar toda a configuração:
+
+```powershell
+# Inicialização completa
+.\init.ps1
+
+# Inicialização sem verificar MySQL
+.\init.ps1 -SkipDbCheck
+
+# Apenas build (sem executar)
+.\init.ps1 -BuildOnly
+```
+
+O script verifica pré-requisitos, restaura dependências, compila o projeto e configura o banco de dados.
+
+### Opção 2: Instalação Manual
+
+#### 1. Configurar Banco de Dados MySQL
+
+Execute o script SQL para criar o banco de dados:
+
+```bash
+mysql -u root -p < InfraEstrutura/Scripts/create_database.sql
+```
+
+Ou execute manualmente no MySQL:
+
+```sql
+CREATE DATABASE IF NOT EXISTS dbEmpresa2025;
+USE dbEmpresa2025;
+-- O script cria as tabelas e insere dados de exemplo
+```
+
+#### 2. Configurar String de Conexão
+
+Edite `Projeto2025_API/appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "default": "Server=localhost;Database=dbEmpresa2025;Uid=root;Pwd=sua_senha;"
+  }
+}
+```
+
+#### 3. Aplicar Migrações do Entity Framework
+
+```bash
+cd Projeto2025_API
+dotnet ef database update --project ..\InfraEstrutura\InfraEstrutura.csproj --startup-project Projeto2025_API.csproj
+```
+
+#### 4. Executar Backend
+
+```bash
+cd Projeto2025_API
+dotnet restore
+dotnet build
+dotnet run
+```
+
+O backend estará disponível em:
+- **Swagger UI**: `http://localhost:5000/swagger`
+- **API Base**: `http://localhost:5000/api`
+
+#### 5. Executar Frontend
+
+```bash
+cd controle-estoque-frontend
+npm install
+npm start
+```
+
+O frontend estará disponível em:
+- **Aplicação**: `http://localhost:3000`
+
+## 🔌 API Endpoints
+
+### Autenticação
+
+#### `POST /api/Seguranca`
+Realiza login e retorna token JWT.
+
+**Request:**
+```json
+{
+  "user": "ana",
+  "Senha": "123456"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+#### `GET /api/Seguranca/token`
+Gera token JWT para testes (sem necessidade de login).
+
+---
+
+### Categorias
+
+Todos os endpoints requerem autenticação JWT.
+
+- `GET /api/Categoria` - Lista todas as categorias
+- `GET /api/Categoria/{id}` - Busca categoria por ID
+- `GET /api/Categoria/{nome}` - Busca categorias por nome
+- `POST /api/Categoria` - Cria nova categoria
+- `PUT /api/Categoria` - Atualiza categoria
+- `DELETE /api/Categoria/{id}` - Remove categoria
+
+---
+
+### Produtos
+
+Todos os endpoints requerem autenticação JWT.
+
+- `GET /api/Produto` - Lista todos os produtos
+- `GET /api/Produto/{id}` - Busca produto por ID
+- `GET /api/Produto/{nome}` - Busca produtos por nome
+- `POST /api/Produto` - Cria novo produto
+- `PUT /api/Produto` - Atualiza produto
+- `DELETE /api/Produto/{id}` - Remove produto
+
+---
+
+### Movimentações
+
+Todos os endpoints requerem autenticação JWT.
+
+- `GET /api/Movimentacao` - Lista todas as movimentações
+- `GET /api/Movimentacao/{id}` - Busca movimentação por ID
+- `GET /api/Movimentacao/produto/{idProduto}` - Busca movimentações por produto
+- `GET /api/Movimentacao/tipo/{tipo}` - Busca movimentações por tipo (Entrada/Saída)
+- `POST /api/Movimentacao` - Cria nova movimentação
+- `DELETE /api/Movimentacao/{id}` - Remove movimentação
+
+---
+
+### Relatórios
+
+Todos os endpoints requerem autenticação JWT.
+
+- `GET /api/Relatorio/sintetico` - Relatório sintético (dashboard)
+- `GET /api/Relatorio/movimentacoes?dataInicio={data}&dataFim={data}` - Relatório de movimentações por período
+- `GET /api/Relatorio/categorias` - Relatório por categorias
+- `GET /api/Relatorio/produtos` - Relatório detalhado de produtos
+
+## ✨ Funcionalidades
 
 ### Backend
 
-1. **Configure o MySQL:**
-   ```sql
-   -- Execute o script SQL
-   mysql -u root -p < InfraEstrutura/Scripts/create_database.sql
-   ```
-
-2. **Configure a string de conexão** no `appsettings.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "default": "Server=localhost;Database=dbEmpresa2025;Uid=root;Pwd=sua_senha;"
-     }
-   }
-   ```
-
-3. **Execute o projeto:**
-   ```bash
-   cd Projeto2025_API
-   dotnet run
-   ```
-
-4. **Acesse a API:**
-   - Swagger: `https://localhost:7000/swagger`
-   - API Base: `https://localhost:7000/api`
+- ✅ **CRUD Completo** de Categorias, Produtos e Movimentações
+- ✅ **Autenticação JWT** com expiração de 120 minutos
+- ✅ **Validações** com FluentValidation
+- ✅ **Tratamento Global de Exceções** via Middleware
+- ✅ **Logging Estruturado**
+- ✅ **Paginação** para grandes volumes de dados
+- ✅ **Relacionamentos** entre entidades com restrições
+- ✅ **Relatórios** com cálculos agregados
+- ✅ **Documentação Swagger** completa
 
 ### Frontend
 
-1. **Instale as dependências:**
-   ```bash
-   cd controle-estoque-frontend
-   npm install
-   ```
+- ✅ **Dashboard** com estatísticas em tempo real
+- ✅ **Gestão de Produtos** (CRUD completo)
+- ✅ **Gestão de Categorias** (CRUD completo)
+- ✅ **Gestão de Movimentações** (entradas e saídas)
+- ✅ **Sistema de Autenticação** com JWT
+- ✅ **Busca** em produtos e categorias
+- ✅ **Relatórios** com exportação para PDF
+- ✅ **Alertas** de produtos com estoque baixo (< 10 unidades)
+- ✅ **Interface Responsiva** para diferentes tamanhos de tela
+- ✅ **Validações de Formulário** em tempo real
 
-2. **Execute o projeto:**
-   ```bash
-   npm start
-   ```
+### Relatórios
 
-3. **Acesse a aplicação:**
-   ```
-   http://localhost:3000
-   ```
+O sistema gera 4 tipos de relatórios:
+
+1. **Relatório Sintético**: Visão geral do estoque
+   - Total de produtos
+   - Produtos sem estoque
+   - Produtos com estoque baixo (< 10 unidades)
+   - Valor total do estoque
+   - Movimentações do dia
+
+2. **Relatório de Movimentações**: Análise de entradas e saídas por período
+   - Total de movimentações
+   - Total de entradas
+   - Total de saídas
+   - Detalhamento de cada movimentação
+
+3. **Relatório por Categorias**: Análise do estoque agrupado por categoria
+   - Total de produtos por categoria
+   - Quantidade total em estoque
+   - Valor total por categoria
+
+4. **Relatório de Produtos**: Análise detalhada de cada produto
+   - Status do estoque (Normal, Estoque Baixo, Sem Estoque)
+   - Valor unitário e total
+   - Categoria de cada produto
+
+Todos os relatórios podem ser exportados para **PDF**.
+
+## ⚙️ Configurações
+
+### CORS
+
+O backend está configurado para aceitar requisições de:
+- `http://localhost:3000`
+- `https://localhost:3000`
+- `http://localhost:3001`
+- `https://localhost:3001`
+
+### JWT
+
+Configurações no `appsettings.json`:
+
+```json
+{
+  "Jwt": {
+    "Key": "AAAAAAAAAACCCCCCCCCCBBBBBBBBBB22",
+    "Issuer": "AlgumIssuer",
+    "Audience": "AlgumaAudience"
+  }
+}
+```
+
+- **Expiração**: 120 minutos (2 horas)
+- **Algoritmo**: HS256
+
+### Banco de Dados
+
+- **SGBD**: MySQL 8.0+
+- **Charset**: UTF-8
+- **Relacionamentos**: 
+  - Produto → Categoria (Many-to-One)
+  - Movimentacao → Produto (Many-to-One)
+- **Restrições**: ON DELETE RESTRICT para manter integridade
+
+### Estoque Baixo
+
+O sistema considera estoque baixo quando a quantidade é:
+- **Maior que 0** (não está sem estoque)
+- **Menor que 10** unidades
+
+Este limite pode ser ajustado no código do `RelatorioService.cs`.
 
 ## 🔐 Credenciais de Acesso
 
-- **Usuário:** ana
-- **Senha:** 123456
+**Usuário padrão:**
+- **Usuário**: `ana`
+- **Senha**: `123456`
 
-## 📋 Funcionalidades
+## 📜 Scripts Úteis
 
-### Backend
-- ✅ CRUD completo de Categorias
-- ✅ CRUD completo de Produtos
-- ✅ Autenticação JWT
-- ✅ Validações com FluentValidation
-- ✅ Tratamento global de exceções
-- ✅ Logging estruturado
-- ✅ Paginação
-- ✅ Relacionamento entre Produtos e Categorias
-- ✅ Documentação com Swagger
+### Script de Inicialização (`init.ps1`)
 
-### Frontend
-- ✅ Dashboard com estatísticas do estoque
-- ✅ Gestão de Produtos (CRUD)
-- ✅ Gestão de Categorias (CRUD)
-- ✅ Sistema de autenticação
-- ✅ Busca em produtos e categorias
-- ✅ Interface responsiva
-- ✅ Alertas de produtos com baixo estoque
-- ✅ Validações de formulário
+Script PowerShell que automatiza a inicialização do projeto:
 
-## 🎯 Principais Melhorias Implementadas
+```powershell
+# Executa verificação de pré-requisitos, build e configuração
+.\init.ps1
 
-1. **Migração para MySQL** - Substituição do SQL Server por MySQL
-2. **Validações Robustas** - Validações customizadas e assíncronas
-3. **Tratamento de Exceções** - Middleware global para tratamento de erros
-4. **Paginação** - Sistema de paginação para grandes volumes de dados
-5. **Logging Estruturado** - Logs organizados e informativos
-6. **Segurança** - CORS configurado adequadamente
-7. **Frontend Completo** - Interface moderna e funcional
+# Pula verificação de MySQL
+.\init.ps1 -SkipDbCheck
 
-## 🔧 Configurações Importantes
+# Apenas build, sem executar
+.\init.ps1 -BuildOnly
+```
 
-### CORS
-O backend está configurado para aceitar requisições do frontend em:
-- `http://localhost:3000`
-- `https://localhost:3000`
+### Comandos Úteis
 
-### JWT
-- **Chave:** Configurada no `appsettings.json`
-- **Issuer/Audience:** Configurados para autenticação
-- **Expiração:** 120 minutos
+**Backend:**
+```bash
+# Restaurar dependências
+dotnet restore
 
-### Banco de Dados
-- **MySQL** com charset UTF-8
-- **Relacionamentos** com restrição de exclusão
-- **Índices** para melhor performance
+# Compilar projeto
+dotnet build
 
-## 📊 Dashboard
+# Executar projeto
+dotnet run
 
-O dashboard apresenta:
-- Total de produtos cadastrados
-- Valor total do estoque
-- Produtos com baixo estoque (< 10 unidades)
-- Lista dos produtos mais caros
+# Aplicar migrações
+dotnet ef database update --project ..\InfraEstrutura\InfraEstrutura.csproj --startup-project Projeto2025_API.csproj
 
-## 🚨 Alertas
+# Criar nova migração
+dotnet ef migrations add NomeDaMigracao --project ..\InfraEstrutura\InfraEstrutura.csproj --startup-project Projeto2025_API.csproj
+```
 
-O sistema identifica automaticamente:
-- Produtos com quantidade menor que 10 unidades
-- Validações de campos obrigatórios
-- Erros de conexão com a API
+**Frontend:**
+```bash
+# Instalar dependências
+npm install
 
-## 🔄 Próximos Passos Sugeridos
+# Executar em desenvolvimento
+npm start
 
-1. **Testes Unitários** - Implementar testes para serviços e repositórios
-2. **Cache** - Implementar cache Redis para melhor performance
-3. **Relatórios** - Adicionar geração de relatórios em PDF/Excel
-4. **Notificações** - Sistema de notificações em tempo real
-5. **Backup** - Sistema automático de backup do banco de dados
-6. **Auditoria** - Log de alterações nos registros
-7. **API Versioning** - Versionamento da API para futuras atualizações
+# Build para produção
+npm run build
+
+# Executar testes
+npm test
+```
+
+## 🐛 Troubleshooting
+
+### Backend não inicia
+
+1. Verifique se o MySQL está rodando
+2. Confirme a string de conexão no `appsettings.json`
+3. Verifique se as migrações foram aplicadas
+4. Veja os logs no console para erros específicos
+
+### Frontend não conecta com a API
+
+1. Verifique se o backend está rodando na porta 5000
+2. Confirme as configurações de CORS
+3. Verifique se o token JWT está sendo enviado nas requisições
+4. Abra o console do navegador (F12) para ver erros
+
+### Erro ao gerar PDF
+
+1. Verifique se as dependências `jspdf` e `jspdf-autotable` estão instaladas
+2. Execute `npm install` novamente
+3. Reinicie o servidor de desenvolvimento
 
 ## 📝 Licença
 
 Este projeto foi desenvolvido para fins educacionais e de demonstração.
+
+## 👥 Contribuição
+
+Para contribuir com o projeto:
+
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+## 📞 Suporte
+
+Para dúvidas ou problemas:
+- Abra uma issue no repositório
+- Consulte a documentação do Swagger em `http://localhost:5000/swagger`
+
+---
+
+**Desenvolvido com ❤️ usando .NET e React**

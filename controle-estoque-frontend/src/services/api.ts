@@ -147,8 +147,8 @@ export const movimentacaoService = {
 };
 
 export const relatorioService = {
-  async getMovimentacoesPorPeriodo(dataInicio: string, dataFim: string): Promise<RelatorioMovimentacoes[]> {
-    const response = await api.get<RelatorioMovimentacoes[]>(`/Relatorio/movimentacoes?dataInicio=${dataInicio}&dataFim=${dataFim}`);
+  async getMovimentacoesPorPeriodo(dataInicio: string, dataFim: string): Promise<RelatorioMovimentacoes> {
+    const response = await api.get<RelatorioMovimentacoes>(`/Relatorio/movimentacoes?dataInicio=${dataInicio}&dataFim=${dataFim}`);
     return response.data;
   },
 
@@ -164,6 +164,8 @@ export const relatorioService = {
 
   async getRelatorioSintetico(): Promise<RelatorioSintetico> {
     const response = await api.get<RelatorioSintetico>(`/Relatorio/sintetico`);
+    console.log('API Response (raw):', response.data);
+    console.log('produtosBaixoEstoque from API:', response.data.produtosBaixoEstoque);
     return response.data;
   }
 };
