@@ -256,6 +256,51 @@ npm start
 O frontend estará disponível em:
 - **Aplicação**: `http://localhost:3000`
 
+### Executando no Visual Studio (Windows)
+
+1. **Abrir a solução**: clique duas vezes em `Projeto2025_API.sln` ou, no Visual Studio, vá em `File > Open > Project/Solution` e selecione o arquivo na raiz do repositório.
+2. **Configurar o backend**:
+   - Confirme a string de conexão em `appsettings.json` (ou utilize *User Secrets* se preferir não versionar a senha).
+   - No Solution Explorer, defina `Projeto2025_API` como *Startup Project*.
+   - Se necessário, restaure pacotes com `Build > Restore NuGet Packages`.
+3. **Executar backend**: pressione `F5` (Debug) ou `Ctrl+F5` (sem Debug). O Visual Studio compilará o projeto e abrirá o Swagger em `http://localhost:5000/swagger`.
+4. **Executar frontend**:
+   - Abra o **Terminal** integrado do Visual Studio (`View > Terminal` ou `Ctrl+``).
+   - Rode os comandos:
+     ```bash
+     cd ..\controle-estoque-frontend
+     npm install    # primeira vez
+     npm start
+     ```
+   - O React iniciará em `http://localhost:3000`.
+5. **Depuração**: mantendo o backend em *Debug* e o frontend com `npm start`, você pode definir breakpoints no código C# e inspecionar requisições via Swagger ou pela aplicação React.
+
+### Executando no Visual Studio Code
+
+1. **Abrir a pasta do projeto**: `File > Open Folder...` e selecione `Trabalho-C--main`.
+2. **Extensões recomendadas**:
+   - C# (Microsoft)
+   - C# Dev Kit (opcional)
+   - ESLint / Prettier (para o frontend)
+3. **Terminais recomendados** (dois painéis):
+   - **Terminal 1 (backend)**:
+     ```bash
+     cd Projeto2025_API
+     dotnet restore
+     dotnet watch run
+     ```
+     Isso compila e executa o backend com hot reload.
+   - **Terminal 2 (frontend)**:
+     ```bash
+     cd controle-estoque-frontend
+     npm install    # primeira vez
+     npm start
+     ```
+4. **Debug no VS Code**:
+   - Pressione `F5` e escolha o profile **.NET Launch** (crie um `launch.json` se solicitado).
+   - Para o frontend, utilize `npm start`; o React já oferece hot reload.
+5. **Variáveis de ambiente**: use arquivos `.env` (frontend) ou `dotnet user-secrets` (backend) para senhas de banco em ambientes de desenvolvimento.
+
 ## 🔌 API Endpoints
 
 ### Autenticação
